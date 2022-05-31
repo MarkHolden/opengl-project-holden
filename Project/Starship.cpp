@@ -36,7 +36,7 @@ GLuint tilesTexture;
 /// <summary>
 /// Speed of camera movment
 /// </summary>
-GLfloat speed = 0.1f;
+GLfloat speed = 5.0f;
 
 // Camera direction and position
 const glm::vec3 gWorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -260,7 +260,7 @@ void UMousePositionCallback(GLFWwindow* window, double xPosition, double yPositi
 
 void UMouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
-    static const GLfloat maxSpeed = 5.0f;
+    static const GLfloat maxSpeed = 10.0f;
     static const GLfloat minSpeed = 0.1f;
     static const GLfloat increment = 0.1f;
 
