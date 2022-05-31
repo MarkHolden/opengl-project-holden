@@ -141,7 +141,7 @@ void UMouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 /// <param name="indices">Vector containing the indices.</param>
 void SetGroundPlane(vector<GLfloat>& verts, vector<GLushort>& indices);
 
-void SetCylinder(GLfloat radius, GLfloat height, vector<GLfloat>& verts, vector<GLushort>& indices);
+void SetCylinder(GLfloat radius, GLfloat height, vector<GLfloat>& verts, vector<GLushort>& indices, glm::vec3 transform = glm::vec3());
 
 int main(int argc, char* argv[])
 {
@@ -387,8 +387,10 @@ void SetColor(GLfloat &r, GLfloat &g, GLfloat &b, int selection)
     }
 }
 
-void SetCylinder(GLfloat radius, GLfloat height, vector<GLfloat>& verts, vector<GLushort>& indices)
+void SetCylinder(GLfloat radius, GLfloat height, vector<GLfloat>& verts, vector<GLushort>& indices, glm::vec3 transform)
 {
+    const GLfloat top = height + transform.y;
+    const GLfloat base = transform.y;
     GLfloat x = 0.0;
     GLfloat z = 0.0;
     GLfloat angle = 0.0;
@@ -402,32 +404,32 @@ void SetCylinder(GLfloat radius, GLfloat height, vector<GLfloat>& verts, vector<
         SetColor(R, G, B, colorSelection);
         GLushort index = indices.back() + 1;
 
-        x = radius * cos(angle);
-        z = radius * sin(angle);
+        x = radius * cos(angle) + transform.x;
+        z = radius * sin(angle) + transform.z;
 
-        AddCoordinate(verts, x, height, z); // 0
+        AddCoordinate(verts, x, top, z); // 0
         AddColor(verts, R, G, B);
 
-        AddCoordinate(verts, x, 0.0f, z); // 1
+        AddCoordinate(verts, x, base, z); // 1
         AddColor(verts, R, G, B);
 
         angle = angle + angle_stepsize;
 
-        x = radius * cos(angle);
-        z = radius * sin(angle);
+        x = radius * cos(angle) + transform.x;
+        z = radius * sin(angle) + transform.z;
 
-        AddCoordinate(verts, x, height, z); // 2
+        AddCoordinate(verts, x, top, z); // 2
         AddColor(verts, R, G, B);
 
-        AddCoordinate(verts, x, 0.0f, z); // 3
+        AddCoordinate(verts, x, base, z); // 3
         AddColor(verts, R, G, B);
 
         // Top center coordinate
-        AddCoordinate(verts, 0.0f, height, 0.0f); // 4
+        AddCoordinate(verts, 0.0f, top, 0.0f); // 4
         AddColor(verts, R, G, B);
 
         // Bottom center coordinate
-        AddCoordinate(verts, 0.0f, 0.0f, 0.0f); // 5
+        AddCoordinate(verts, 0.0f, base, 0.0f); // 5
         AddColor(verts, R, G, B);
 
         // First side triangle
@@ -461,7 +463,8 @@ void UCreateMesh(GLMesh& mesh)
     vector<GLushort> indices;
     indices.clear();
     SetGroundPlane(verts, indices);
-    SetCylinder(1.5f, 10.0f, verts, indices);
+    SetCylinder(4.5f, 70.0f, verts, indices);
+    SetCylinder(4.5f, 36.0f, verts, indices, glm::vec3(0.0f, 75.0f, 0.0f));
     
     glGenVertexArrays(1, &mesh.vertexArrayObject);
     glBindVertexArray(mesh.vertexArrayObject);
@@ -504,11 +507,11 @@ void URenderFrame()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // 1. Scales the object by 2
-    glm::mat4 scale = glm::scale(glm::vec3(1.0f, 1.0f, 1.0f));
+    glm::mat4 scale = glm::scale(glm::vec3(0.1f, 0.1f, 0.1f));
     // 2. Rotates shape by ?? degrees in the ? axis
     glm::mat4 rotation = glm::rotate(1.0f, glm::vec3(0.0f, 1.0f, 0.0f)); // Vertical
     // 3. Place object at the origin
-    glm::mat4 translation = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
+    glm::mat4 translation = glm::translate(glm::vec3(0.0f, -8.7f, -5.0f));
     // Model matrix: transformations are applied right-to-left order
     glm::mat4 model = translation * rotation * scale;
 
@@ -576,8 +579,6 @@ void URenderFrame()
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-    //glDrawArrays(GL_TRIANGLES, 0, mesh.vertexCount);
 
     glBindVertexArray(mesh.vertexArrayObject);
 
