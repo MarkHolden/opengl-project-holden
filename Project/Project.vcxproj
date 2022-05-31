@@ -151,12 +151,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Starship.cpp" />
+    <ClCompile Include="Program.cpp" />
     <ClCompile Include="stb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLMesh.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Starship.h" />
+    <ClInclude Include="VertexService.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="tiles.png" />
