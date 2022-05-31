@@ -316,10 +316,7 @@ void UCreateMesh(GLMesh& mesh)
     vector<GLushort> indices;
     indices.clear();
     SetGroundPlane(verts, indices);
-    Starship::SetCylinder(4.5f, 70.0f, verts, indices);
-    Starship::SetCylinder(4.5f, 36.0f, verts, indices, glm::vec3(0.0f, 75.0f, 0.0f));
-    Starship::SetRearFlap(verts, indices, glm::vec3(4.5f, 75.0f, 0.0f));
-    Starship::SetRearFlap(verts, indices, glm::vec3(-4.5f, 75.0f, 0.0f), /*Flip*/ true);
+    Starship::SetStarship(verts, indices);
     
     glGenVertexArrays(1, &mesh.vertexArrayObject);
     glBindVertexArray(mesh.vertexArrayObject);
