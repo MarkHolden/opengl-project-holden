@@ -319,71 +319,44 @@ void AddCoordinate(vector<GLfloat>& verts, GLfloat x, GLfloat y, GLfloat z)
     verts.push_back(z);
 }
 
-void AddColor(vector<GLfloat>& verts, GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0f)
+void AddColor(vector<GLfloat>& verts, glm::vec3 rgb, GLfloat a = 1.0f)
 {
-    verts.push_back(r);
-    verts.push_back(g);
-    verts.push_back(b);
+    verts.push_back(rgb.r);
+    verts.push_back(rgb.g);
+    verts.push_back(rgb.b);
     verts.push_back(a);
 }
 
-void SetColor(GLfloat &r, GLfloat &g, GLfloat &b, int selection)
+glm::vec3 GetColor(int selection)
 {
     switch (selection % 8)
     {
     case 0: // Red
-        r = 1.0f;
-        g = 0.0f;
-        b = 0.0f;
-        break;
+        return glm::vec3(1.0f, 0.0f, 0.0f);
 
     case 1: // Orange
-        r = 1.0f;
-        g = 0.5f;
-        b = 0.0f;
-        break;
+        return glm::vec3(1.0f, 0.5f, 0.0f);
 
     case 2: // Yellow
-        r = 1.0f;
-        g = 1.0f;
-        b = 0.0f;
-        break;
+        return glm::vec3(1.0f, 1.0f, 0.0f);
 
     case 3: // Green
-        r = 0.0f;
-        g = 1.0f;
-        b = 0.0f;
-        break;
+        return glm::vec3(0.0f, 1.0f, 0.0f);
 
     case 4: // Blue Green
-        r = 0.0f;
-        g = 1.0f;
-        b = 1.0f;
-        break;
+        return glm::vec3(0.0f, 1.0f, 1.0f);
 
     case 5: // Blue
-        r = 0.0f;
-        g = 0.0f;
-        b = 1.0f;
-        break;
+        return glm::vec3(0.0f, 0.0f, 1.0f);
 
     case 6: // Violet
-        r = 0.5f;
-        g = 0.0f;
-        b = 1.0f;
-        break;
+        return glm::vec3(0.5f, 0.0f, 1.0f);
 
     case 7: // Purple
-        r = 1.0f;
-        g = 0.0f;
-        b = 1.0f;
-        break;
+        return glm::vec3(1.0f, 0.0f, 1.0f);
 
     default:
-        r = 0.0f;
-        g = 0.0f;
-        b = 0.0f;
-        break;
+        return glm::vec3();
     }
 }
 
@@ -396,22 +369,18 @@ void SetCylinder(GLfloat radius, GLfloat height, vector<GLfloat>& verts, vector<
     GLfloat angle = 0.0;
     GLfloat angle_stepsize = 0.3142f; // 0.1f;
     int colorSelection = 0;
-    GLfloat R;
-    GLfloat G;
-    GLfloat B;
 
     while (angle < 2 * PI) {
-        SetColor(R, G, B, colorSelection);
         GLushort index = indices.back() + 1;
 
         x = radius * cos(angle) + transform.x;
         z = radius * sin(angle) + transform.z;
 
         AddCoordinate(verts, x, top, z); // 0
-        AddColor(verts, R, G, B);
+        AddColor(verts, GetColor(colorSelection));
 
         AddCoordinate(verts, x, base, z); // 1
-        AddColor(verts, R, G, B);
+        AddColor(verts, GetColor(colorSelection));
 
         angle = angle + angle_stepsize;
 
@@ -419,18 +388,18 @@ void SetCylinder(GLfloat radius, GLfloat height, vector<GLfloat>& verts, vector<
         z = radius * sin(angle) + transform.z;
 
         AddCoordinate(verts, x, top, z); // 2
-        AddColor(verts, R, G, B);
+        AddColor(verts, GetColor(colorSelection));
 
         AddCoordinate(verts, x, base, z); // 3
-        AddColor(verts, R, G, B);
+        AddColor(verts, GetColor(colorSelection));
 
         // Top center coordinate
         AddCoordinate(verts, 0.0f, top, 0.0f); // 4
-        AddColor(verts, R, G, B);
+        AddColor(verts, GetColor(colorSelection));
 
         // Bottom center coordinate
         AddCoordinate(verts, 0.0f, base, 0.0f); // 5
-        AddColor(verts, R, G, B);
+        AddColor(verts, GetColor(colorSelection));
 
         // First side triangle
         indices.push_back(index); // 0
@@ -591,15 +560,16 @@ void URenderFrame()
 
 void SetGroundPlane(vector<GLfloat>& verts, vector<GLushort>& indices)
 {
+    auto sand = glm::vec3(0.91f, 0.72f, 0.30f);  // looks like sand for now.
     GLushort currentIndex = 0;
     AddCoordinate(verts, -50.0f, -5.0f, -50.0f); // south west corner
-    AddColor(verts, 0.91f, 0.72f, 0.30f); // looks like sand for now.
+    AddColor(verts, sand);
     AddCoordinate(verts, -50.0f, -5.0f,  50.0f); // north west corner
-    AddColor(verts, 0.91f, 0.72f, 0.30f); // looks like sand for now.
+    AddColor(verts, sand);
     AddCoordinate(verts,  50.0f, -5.0f,  50.0f); // north east corner
-    AddColor(verts, 0.91f, 0.72f, 0.30f); // looks like sand for now.
+    AddColor(verts, sand);
     AddCoordinate(verts,  50.0f, -5.0f, -50.0f); // south east corner
-    AddColor(verts, 0.91f, 0.72f, 0.30f); // looks like sand for now.
+    AddColor(verts, sand);
 
     indices.push_back(currentIndex);
     indices.push_back(currentIndex + 1);
