@@ -53,4 +53,11 @@ public:
             return glm::vec3();
         }
     }
+
+    static void SetTriangle(std::vector<GLushort>& indices, GLushort a, GLushort b, GLushort c)
+    {
+        indices.push_back(a);
+        indices.push_back(b);
+        indices.push_back(c);
+    }
 };
