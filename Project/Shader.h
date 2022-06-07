@@ -11,12 +11,12 @@
 const GLchar* vertexShaderSource = GLSL(440,
     layout(location = 0) in vec3 position; // Vertex data from Vertex Attrib Pointer 0
     layout(location = 1) in vec4 color;    // Color data from Vertex Attrib Pointer 1
-    //layout(location = 2) in vec2 coord;    // texture coordinates from Vertex Attrib Pointer 2
+    layout(location = 2) in vec2 textureCoordinate;    // texture coordinates from Vertex Attrib Pointer 2
 
-    out vec4 vertexColor;  // variable to transfer color data to the fragment shader
-    //out vec2 textureCoord; // variable to transfer texture coordinate data to the fragment shader
+    // out vec4 vertexColor;  // variable to transfer color data to the fragment shader
+    out vec2 vertexTextureCoordinate; // variable to transfer texture coordinate data to the fragment shader
 
-    //Global variables for the  transform matrices
+    // Global variables for the  transform matrices
     uniform mat4 model;
     uniform mat4 view;
     uniform mat4 projection;
@@ -24,25 +24,25 @@ const GLchar* vertexShaderSource = GLSL(440,
     void main()
     {
         gl_Position = projection * view * model * vec4(position, 1.0f); // transforms vertices to clip coordinates
-        vertexColor = color; // references incoming color data
-        //textureCoord = coord; // references incoming texture coordinate data
+        //vertexColor = color; // references incoming color data
+        vertexTextureCoordinate = textureCoordinate; // references incoming texture coordinate data
     }
 );
 
 
 /* Fragment Shader Source Code*/
 const GLchar* fragmentShaderSource = GLSL(440,
-    in vec4 vertexColor;   // Variable to hold incoming color data from vertex shader
-    //in vec2 textureCoord;  // Variable to hold incoming texture coordinate data from vertex shader
+    //in vec4 vertexColor;   // Variable to hold incoming color data from vertex shader
+    in vec2 vertexTextureCoordinate;  // Variable to hold incoming texture coordinate data from vertex shader
 
     out vec4 fragmentColor;
 
-    //uniform sampler2D tex0;
+    uniform sampler2D uTexture;
 
     void main()
     {
-        //fragmentColor = texture(tex0, textureCoord);  //vec4(vertexColor);
-        fragmentColor = vec4(vertexColor);
+        fragmentColor = texture(uTexture, vertexTextureCoordinate);
+        //fragmentColor = vec4(vertexColor);
     }
 );
 

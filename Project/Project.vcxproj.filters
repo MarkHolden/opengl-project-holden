@@ -40,5 +40,8 @@
     <Image Include="tiles.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="imagery.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

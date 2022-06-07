@@ -14,6 +14,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "GLMesh.h"
@@ -31,6 +33,7 @@ GLFWwindow* mainWindow = nullptr;
 GLMesh mesh;
 GLuint shaderProgramId;
 GLuint tilesTexture;
+GLuint imageryTexture;
 
 /// <summary>
 /// Speed of camera movment
@@ -140,6 +143,14 @@ void UMouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 /// <param name="indices">Vector containing the indices.</param>
 void SetGroundPlane(vector<GLfloat>& verts, vector<GLushort>& indices);
 
+/// <summary>
+/// Creates a texture.
+/// </summary>
+/// <param name="filename">File from which to load texture.</param>
+/// <param name="textureId">Id to assign the texture.</param>
+/// <returns></returns>
+bool UCreateTexture(const char* filename, GLuint& textureId);
+
 int main(int argc, char* argv[])
 {
     if (!UInitialize(argc, argv, &mainWindow))
@@ -149,6 +160,25 @@ int main(int argc, char* argv[])
 
     if (!Shader::UCreateShaderProgram(shaderProgramId))
         return EXIT_FAILURE;
+
+    // Load textures
+    const char* texFilename = "./tiles.png";
+    if (!UCreateTexture(texFilename, tilesTexture))
+    {
+        cout << "Failed to load texture " << texFilename << endl;
+        return EXIT_FAILURE;
+    }
+
+    texFilename = "./imagery.png";
+    if (!UCreateTexture(texFilename, imageryTexture))
+    {
+        cout << "Failed to load texture " << texFilename << endl;
+        return EXIT_FAILURE;
+    }
+    
+    glUseProgram(shaderProgramId); // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureImagery"), 1);
 
     while (!glfwWindowShouldClose(mainWindow))
     {
@@ -333,8 +363,9 @@ void UCreateMesh(GLMesh& mesh)
     // Creates the Vertex Attribute Pointer
     const GLuint floatsPerVertex = 3; // Number of coordinates per vertex
     const GLuint floatsPerColor = 4; // R, G, B, A
-    // Strides between vertex coordinates is 7 floats (x, y, r, g, b, a). A tightly packed stride is 0.
-    GLint stride = sizeof(float) * (floatsPerVertex + floatsPerColor);// The number of floats before each
+    const GLuint floatsPerTexture = 2; // s, t
+    // Strides between vertex coordinates is 9 (x, y, z, r, g, b, a, s, t). A tightly packed stride is 0.
+    GLint stride = sizeof(float) * (floatsPerVertex + floatsPerColor + floatsPerTexture); // The number of floats before each
 
     // Creates the Vertex Attribute Pointer
     const int LOCATION_ATTRIBUTE = 0;
@@ -344,12 +375,55 @@ void UCreateMesh(GLMesh& mesh)
     const int COLOR_ATTRIBUTE = 1;
     glVertexAttribPointer(COLOR_ATTRIBUTE, floatsPerColor, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * floatsPerVertex));
     glEnableVertexAttribArray(COLOR_ATTRIBUTE);
+
+    const int TEXTURE_COORDINATE_ATTRIBUTE = 2;
+    glVertexAttribPointer(TEXTURE_COORDINATE_ATTRIBUTE, floatsPerTexture, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * (floatsPerVertex + floatsPerColor)));
+    glEnableVertexAttribArray(TEXTURE_COORDINATE_ATTRIBUTE);
 }
 
 void UDestroyMesh(GLMesh& mesh)
 {
     glDeleteVertexArrays(1, &mesh.vertexArrayObject);
     glDeleteBuffers(2, mesh.vertexBufferObjects);
+}
+
+bool UCreateTexture(const char* filename, GLuint& textureId)
+{
+    int width;
+    int height;
+    int channels;
+    stbi_set_flip_vertically_on_load(1);
+    unsigned char* image = stbi_load(filename, &width, &height, &channels, 0);
+    if (image)
+    {
+        glGenTextures(1, &textureId);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        if (channels == 3)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+        else if (channels == 4)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+        else
+        {
+            cout << "Not implemented to handle image with " << channels << " channels" << endl;
+            return false;
+        }
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        stbi_image_free(image);
+        glBindTexture(GL_TEXTURE_2D, 0); // Unbind the texture
+
+        return true;
+    }
+
+    // Error loading the image
+    return false;
 }
 
 void URenderFrame()
@@ -434,6 +508,11 @@ void URenderFrame()
 
     glBindVertexArray(mesh.vertexArrayObject);
 
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, imageryTexture);
+
+    //glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 0);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Wireframes for testing
     glDrawElements(GL_TRIANGLES, mesh.vertexCount, GL_UNSIGNED_SHORT, nullptr);
     glBindVertexArray(0);
@@ -447,12 +526,16 @@ void SetGroundPlane(vector<GLfloat>& verts, vector<GLushort>& indices)
     GLushort currentIndex = 0;
     VertexService::AddCoordinate(verts, -50.0f, -5.0f, -50.0f); // south west corner
     VertexService::AddColor(verts, sand);
+    VertexService::AddTextureCoordinate(verts, 0.0f, 0.0f);
     VertexService::AddCoordinate(verts, -50.0f, -5.0f,  50.0f); // north west corner
     VertexService::AddColor(verts, sand);
+    VertexService::AddTextureCoordinate(verts, 0.0f, 1.0f);
     VertexService::AddCoordinate(verts,  50.0f, -5.0f,  50.0f); // north east corner
     VertexService::AddColor(verts, sand);
+    VertexService::AddTextureCoordinate(verts, 1.0f, 1.0f);
     VertexService::AddCoordinate(verts,  50.0f, -5.0f, -50.0f); // south east corner
     VertexService::AddColor(verts, sand);
+    VertexService::AddTextureCoordinate(verts, 1.0f, 0.0f);
 
     indices.push_back(currentIndex);
     indices.push_back(currentIndex + 1);

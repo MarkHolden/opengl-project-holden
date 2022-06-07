@@ -21,6 +21,12 @@ public:
         verts.push_back(a);
     }
 
+    static void AddTextureCoordinate(std::vector<GLfloat>& verts, GLfloat s, GLfloat t)
+    {
+        verts.push_back(s);
+        verts.push_back(t);
+    }
+
     static glm::vec3 GetColor(int selection)
     {
         switch (selection % 8)

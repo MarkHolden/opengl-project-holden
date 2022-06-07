@@ -18,8 +18,8 @@ public:
     {   
         SetCylinder(4.5f, 70.0f, vertices, indices);
         SetCylinder(4.5f, 36.0f, vertices, indices, false, glm::vec3(0.0f, 75.0f, 0.0f));
-        SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices);
-        SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*Flip*/ true);
+        //SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices);
+        //SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*Flip*/ true);
     }
 
 private:
@@ -41,9 +41,11 @@ private:
 
             VertexService::AddCoordinate(vertices, x, top, z); // 0
             VertexService::AddColor(vertices, GetColor(angle + angle_stepsize, colorSelection, isBooster));
+            VertexService::AddTextureCoordinate(vertices, 0.0f, height);
 
             VertexService::AddCoordinate(vertices, x, base, z); // 1
             VertexService::AddColor(vertices, GetColor(angle + angle_stepsize, colorSelection, isBooster));
+            VertexService::AddTextureCoordinate(vertices, 0.0f, 0.0f);
 
             angle = angle + angle_stepsize;
 
@@ -52,17 +54,21 @@ private:
 
             VertexService::AddCoordinate(vertices, x, top, z); // 2
             VertexService::AddColor(vertices, GetColor(angle, colorSelection, isBooster));
+            VertexService::AddTextureCoordinate(vertices, 20 * radius, height);
 
             VertexService::AddCoordinate(vertices, x, base, z); // 3
             VertexService::AddColor(vertices, GetColor(angle, colorSelection, isBooster));
+            VertexService::AddTextureCoordinate(vertices, 20 * radius, 0.0f);
 
             // Top center coordinate
             VertexService::AddCoordinate(vertices, 0.0f, top, 0.0f); // 4
             VertexService::AddColor(vertices, GetColor(angle, colorSelection, isBooster));
+            VertexService::AddTextureCoordinate(vertices, 0.0f, 0.0f);
 
             // Bottom center coordinate
             VertexService::AddCoordinate(vertices, 0.0f, base, 0.0f); // 5
             VertexService::AddColor(vertices, GetColor(angle, colorSelection, isBooster));
+            VertexService::AddTextureCoordinate(vertices, 0.0f, 0.0f);
 
             VertexService::SetTriangle(indices, index, index + 1, index + 2); // First side triangle
             VertexService::SetTriangle(indices, index + 1, index + 2, index + 3); // Second side triangle
