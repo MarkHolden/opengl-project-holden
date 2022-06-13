@@ -6,19 +6,48 @@
 class VertexService
 {
 public:
-    static void AddCoordinate(std::vector<GLfloat>& verts, GLfloat x, GLfloat y, GLfloat z)
+    static void AddFace(std::vector<GLfloat>& vertices, std::vector<GLushort>& indices,
+        glm::vec3 vertex1, glm::vec2 vertex1TextureCoordinates,
+        glm::vec3 vertex2, glm::vec2 vertex2TextureCoordinates,
+        glm::vec3 vertex3, glm::vec2 vertex3TextureCoordinates)
     {
-        verts.push_back(x);
-        verts.push_back(y);
-        verts.push_back(z);
+        GLushort index = indices.size() > 0 ? indices.back() : -1;
+        glm::vec3 faceNormal = GetFaceNormal(vertex1, vertex2, vertex3);
+        AddVector(vertices, vertex1);
+        AddVector(vertices, faceNormal);
+        AddTextureCoordinate(vertices, vertex1TextureCoordinates);
+        indices.push_back(index + 1);
+
+        AddVector(vertices, vertex2);
+        AddVector(vertices, faceNormal);
+        AddTextureCoordinate(vertices, vertex2TextureCoordinates);
+        indices.push_back(index + 2);
+        
+        AddVector(vertices, vertex3);
+        AddVector(vertices, faceNormal);
+        AddTextureCoordinate(vertices, vertex3TextureCoordinates);
+        indices.push_back(index + 3);
     }
 
-    static void AddColor(std::vector<GLfloat>& verts, glm::vec3 rgb, GLfloat a = 1.0f)
+private:
+    static glm::vec3 GetFaceNormal(glm::vec3 vertex1, glm::vec3 vertex2, glm::vec3 vertex3)
     {
-        verts.push_back(rgb.r);
-        verts.push_back(rgb.g);
-        verts.push_back(rgb.b);
-        verts.push_back(a);
+        glm::vec3 edge1 = vertex1 - vertex2;
+        glm::vec3 edge2 = vertex3 - vertex2;
+        glm::vec3 cross = glm::cross(edge1, edge2);
+        return glm::normalize(cross);
+    }
+
+    static void AddVector(std::vector<GLfloat>& vertices, glm::vec3 vector)
+    {
+        AddVector(vertices, vector.x, vector.y, vector.z);
+    }
+
+    static void AddVector(std::vector<GLfloat>& vertices, GLfloat x, GLfloat y, GLfloat z)
+    {
+        vertices.push_back(x);
+        vertices.push_back(y);
+        vertices.push_back(z);
     }
 
     static void AddTextureCoordinate(std::vector<GLfloat>& verts, GLfloat s, GLfloat t)
@@ -27,43 +56,8 @@ public:
         verts.push_back(t);
     }
 
-    static glm::vec3 GetColor(int selection)
+    static void AddTextureCoordinate(std::vector<GLfloat>& verts, glm::vec2 texture)
     {
-        switch (selection % 8)
-        {
-        case 0: // Red
-            return glm::vec3(1.0f, 0.0f, 0.0f);
-
-        case 1: // Orange
-            return glm::vec3(1.0f, 0.5f, 0.0f);
-
-        case 2: // Yellow
-            return glm::vec3(1.0f, 1.0f, 0.0f);
-
-        case 3: // Green
-            return glm::vec3(0.0f, 1.0f, 0.0f);
-
-        case 4: // Blue Green
-            return glm::vec3(0.0f, 1.0f, 1.0f);
-
-        case 5: // Blue
-            return glm::vec3(0.0f, 0.0f, 1.0f);
-
-        case 6: // Violet
-            return glm::vec3(0.5f, 0.0f, 1.0f);
-
-        case 7: // Purple
-            return glm::vec3(1.0f, 0.0f, 1.0f);
-
-        default:
-            return glm::vec3();
-        }
-    }
-
-    static void SetTriangle(std::vector<GLushort>& indices, GLushort a, GLushort b, GLushort c)
-    {
-        indices.push_back(a);
-        indices.push_back(b);
-        indices.push_back(c);
+        AddTextureCoordinate(verts, texture.s, texture.t);
     }
 };

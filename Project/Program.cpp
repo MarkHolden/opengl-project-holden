@@ -4,7 +4,7 @@
 // Date:    5/22/2022
 // 
 //===============================================================
-
+#pragma once
 #include <iostream>
 #include <cstdlib>
 #include <GL/glew.h>
@@ -21,6 +21,7 @@
 #include "GLMesh.h"
 #include "Shader.h"
 #include "Starship.h"
+#include "VertexService.h"
 #include <vector>
 
 using namespace std;
@@ -30,10 +31,22 @@ const int WINDOW_WIDTH = 1600;
 const int WINDOW_HEIGHT = 1200;
 
 GLFWwindow* mainWindow = nullptr;
-GLMesh mesh;
+
+GLMesh groundMesh;
+GLMesh boosterSmoothSectionMesh;
+GLMesh boosterReinforcedSectionMesh;
+GLMesh starshipTiledSectionMesh;
+GLMesh starshipSteelSectionMesh;
+GLMesh boosterGridfinMesh;
+GLMesh towerMesh;
+
 GLuint shaderProgramId;
 GLuint tilesTexture;
 GLuint imageryTexture;
+
+glm::vec3 gObjectColor(1.f, 0.2f, 0.0f);
+glm::vec3 gLightColor(1.0f, 1.0f, 1.0f);
+glm::vec3 gLightPosition(1.0f, 10.0f, -30.0f);
 
 /// <summary>
 /// Speed of camera movment
@@ -100,8 +113,10 @@ void UProcessInput();
 /// You Create a Mesh!
 /// <para>Function to create the Vertex Buffer Object</para>
 /// </summary>
-/// <param name="mesh"></param>
-void UCreateMesh(GLMesh& mesh);
+/// <param name="mesh">Mesh to create.</param>
+/// <param name="vertices">Vector containing the vertices.</param>
+/// <param name="indices">Vector containing the indices.</param>
+void UCreateMesh(GLMesh& mesh, vector<GLfloat>& verts, vector<GLushort>& indices);
 
 /// <summary>
 /// You Destroy a Mesh!
@@ -139,16 +154,20 @@ void UMouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 /// <summary>
 /// Adds the vertices and indices for the ground plane to the vectors.
 /// </summary>
-/// <param name="vertices">Vector containing the vertices.</param>
-/// <param name="indices">Vector containing the indices.</param>
-void SetGroundPlane(vector<GLfloat>& verts, vector<GLushort>& indices);
+void SetGroundPlane();
+
+/// <summary>
+/// Loads all textures into global variables.
+/// </summary>
+/// <returns>Success.</returns>
+bool LoadTextures();
 
 /// <summary>
 /// Creates a texture.
 /// </summary>
 /// <param name="filename">File from which to load texture.</param>
 /// <param name="textureId">Id to assign the texture.</param>
-/// <returns></returns>
+/// <returns>Success.</returns>
 bool UCreateTexture(const char* filename, GLuint& textureId);
 
 int main(int argc, char* argv[])
@@ -156,29 +175,14 @@ int main(int argc, char* argv[])
     if (!UInitialize(argc, argv, &mainWindow))
         return EXIT_FAILURE;
 
-    UCreateMesh(mesh);
 
     if (!Shader::UCreateShaderProgram(shaderProgramId))
         return EXIT_FAILURE;
 
-    // Load textures
-    const char* texFilename = "./tiles.png";
-    if (!UCreateTexture(texFilename, tilesTexture))
-    {
-        cout << "Failed to load texture " << texFilename << endl;
+    if (!LoadTextures())
         return EXIT_FAILURE;
-    }
-
-    texFilename = "./imagery.png";
-    if (!UCreateTexture(texFilename, imageryTexture))
-    {
-        cout << "Failed to load texture " << texFilename << endl;
-        return EXIT_FAILURE;
-    }
     
-    glUseProgram(shaderProgramId); // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
-    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 0);
-    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureImagery"), 1);
+    SetGroundPlane();
 
     while (!glfwWindowShouldClose(mainWindow))
     {
@@ -191,7 +195,7 @@ int main(int argc, char* argv[])
         glfwPollEvents();
     }
 
-    UDestroyMesh(mesh);
+    UDestroyMesh(groundMesh);
     Shader::UDestroyShaderProgram(shaderProgramId);
     glDeleteTextures(1, &tilesTexture);
     glfwDestroyWindow(mainWindow);
@@ -339,21 +343,17 @@ void UProcessInput()
         isOrthographic = !isOrthographic;
 }
 
-void UCreateMesh(GLMesh& mesh)
+void UCreateMesh(GLMesh& mesh, vector<GLfloat>& vertices, vector<GLushort>& indices)
 {
-    vector<GLfloat> verts;
-    verts.clear();
-    vector<GLushort> indices;
-    indices.clear();
-    SetGroundPlane(verts, indices);
-    Starship::SetStarship(verts, indices);
+    
+    //Starship::SetStarship(verts, indices);
     
     glGenVertexArrays(1, &mesh.vertexArrayObject);
     glBindVertexArray(mesh.vertexArrayObject);
 
     glGenBuffers(2, mesh.vertexBufferObjects);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferObjects[0]);
-    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(GLfloat), verts.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
 
     mesh.vertexCount = indices.size();//sizeof(indices) / sizeof(indices[0]); // Memory of indices array divided by the memory of the first element
 
@@ -362,10 +362,10 @@ void UCreateMesh(GLMesh& mesh)
 
     // Creates the Vertex Attribute Pointer
     const GLuint floatsPerVertex = 3; // Number of coordinates per vertex
-    const GLuint floatsPerColor = 4; // R, G, B, A
+    const GLuint floatsPerNormal = 3; // unit vector perpendicular to the face
     const GLuint floatsPerTexture = 2; // s, t
-    // Strides between vertex coordinates is 9 (x, y, z, r, g, b, a, s, t). A tightly packed stride is 0.
-    GLint stride = sizeof(float) * (floatsPerVertex + floatsPerColor + floatsPerTexture); // The number of floats before each
+    // Strides between vertex coordinates is 8 (x, y, z, n1, n2, n3, s, t). A tightly packed stride is 0.
+    GLint stride = sizeof(float) * (floatsPerVertex + floatsPerNormal + floatsPerTexture); // The number of floats before each
 
     // Creates the Vertex Attribute Pointer
     const int LOCATION_ATTRIBUTE = 0;
@@ -373,11 +373,11 @@ void UCreateMesh(GLMesh& mesh)
     glEnableVertexAttribArray(LOCATION_ATTRIBUTE);
 
     const int COLOR_ATTRIBUTE = 1;
-    glVertexAttribPointer(COLOR_ATTRIBUTE, floatsPerColor, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * floatsPerVertex));
+    glVertexAttribPointer(COLOR_ATTRIBUTE, floatsPerNormal, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * floatsPerVertex));
     glEnableVertexAttribArray(COLOR_ATTRIBUTE);
 
     const int TEXTURE_COORDINATE_ATTRIBUTE = 2;
-    glVertexAttribPointer(TEXTURE_COORDINATE_ATTRIBUTE, floatsPerTexture, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * (floatsPerVertex + floatsPerColor)));
+    glVertexAttribPointer(TEXTURE_COORDINATE_ATTRIBUTE, floatsPerTexture, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * (floatsPerVertex + floatsPerNormal)));
     glEnableVertexAttribArray(TEXTURE_COORDINATE_ATTRIBUTE);
 }
 
@@ -385,6 +385,27 @@ void UDestroyMesh(GLMesh& mesh)
 {
     glDeleteVertexArrays(1, &mesh.vertexArrayObject);
     glDeleteBuffers(2, mesh.vertexBufferObjects);
+}
+
+bool LoadTextures()
+{
+    const char* texFilename = "./tiles.png";
+    if (!UCreateTexture(texFilename, tilesTexture))
+    {
+        cout << "Failed to load texture " << texFilename << endl;
+        return false;
+    }
+
+    texFilename = "./imagery.png";
+    if (!UCreateTexture(texFilename, imageryTexture))
+    {
+        cout << "Failed to load texture " << texFilename << endl;
+        return false;
+    }
+
+    glUseProgram(shaderProgramId); // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureImagery"), 1);
 }
 
 bool UCreateTexture(const char* filename, GLuint& textureId)
@@ -441,15 +462,6 @@ void URenderFrame()
     // Model matrix: transformations are applied right-to-left order
     glm::mat4 model = translation * rotation * scale;
 
-    // Make it spiiiiinn!!!
-    //double currentTime = glfwGetTime();
-    //if (currentTime - previousTime >= 1 / 60)
-    //{
-    //    rotation += 0.5f;
-    //    previousTime = currentTime;
-    //}
-    //model = glm::rotate(model, glm::radians(rotationDegrees), glm::vec3(0.0f, 1.0f, 0.0f));
-
     // Transforms the camera: move the camera
     glm::mat4 view = glm::lookAt(gCameraPos, gCameraPos + gCameraFront, gCameraUp);
     //glm::mat4 view = glm::translate(glm::vec3(0.0f, 0.0f, -50.0f));
@@ -472,75 +484,54 @@ void URenderFrame()
     GLint modelLoc = glGetUniformLocation(shaderProgramId, "model");
     GLint viewLoc = glGetUniformLocation(shaderProgramId, "view");
     GLint projLoc = glGetUniformLocation(shaderProgramId, "projection");
-        
-    
-
-
-    // Texture
-    //int imgWidth, imgHeight, imgColorChannels;
-    //stbi_set_flip_vertically_on_load(true);
-    //unsigned char* bytes = stbi_load("tiles.png", &imgWidth, &imgHeight, &imgColorChannels, 0);
-    //glGenTextures(1, &tilesTexture);
-    //glActiveTexture(GL_TEXTURE0);
-    //glBindTexture(GL_TEXTURE_2D, tilesTexture);
-    //
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    //
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes);
-    //glGenerateMipmap(GL_TEXTURE_2D);
-
-    //stbi_image_free(bytes); // free up memory
-    //glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture to prevent changes
-
-    //GLint textureLoc = glGetUniformLocation(shaderProgramId, "tex0");
-    //glUniform1i(textureLoc, 0);
-
-
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-    glBindVertexArray(mesh.vertexArrayObject);
+    // Reference matrix uniforms from the Object Shader program for the Object color, light color, light position, and camera position
+    GLint objectColorLoc = glGetUniformLocation(shaderProgramId, "objectColor");
+    GLint lightColorLoc = glGetUniformLocation(shaderProgramId, "lightColor");
+    GLint lightPositionLoc = glGetUniformLocation(shaderProgramId, "lightPos");
+    GLint viewPositionLoc = glGetUniformLocation(shaderProgramId, "viewPosition");
 
+    // Pass color, light, and camera data to the Object Shader program's corresponding uniforms
+    glUniform3f(objectColorLoc, gObjectColor.r, gObjectColor.g, gObjectColor.b);
+    glUniform3f(lightColorLoc, gLightColor.r, gLightColor.g, gLightColor.b);
+    glUniform3f(lightPositionLoc, gLightPosition.x, gLightPosition.y, gLightPosition.z);
+    const glm::vec3 cameraPosition = gCameraPos;
+    glUniform3f(viewPositionLoc, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, imageryTexture);
+    GLint UVScaleLoc = glGetUniformLocation(shaderProgramId, "uvScale");
+    glUniform2fv(UVScaleLoc, 1, glm::value_ptr(glm::vec2(1.0f, 1.0f)));
 
-    //glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 0);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Wireframes for testing
-    glDrawElements(GL_TRIANGLES, mesh.vertexCount, GL_UNSIGNED_SHORT, nullptr);
-    glBindVertexArray(0);
+    groundMesh.Draw();
  
     glfwSwapBuffers(mainWindow);
 }
 
-void SetGroundPlane(vector<GLfloat>& verts, vector<GLushort>& indices)
+void SetGroundPlane()
 {
-    auto sand = glm::vec3(0.91f, 0.72f, 0.30f);  // looks like sand for now.
-    GLushort currentIndex = 0;
-    VertexService::AddCoordinate(verts, -50.0f, -5.0f, -50.0f); // south west corner
-    VertexService::AddColor(verts, sand);
-    VertexService::AddTextureCoordinate(verts, 0.0f, 0.0f);
-    VertexService::AddCoordinate(verts, -50.0f, -5.0f,  50.0f); // north west corner
-    VertexService::AddColor(verts, sand);
-    VertexService::AddTextureCoordinate(verts, 0.0f, 1.0f);
-    VertexService::AddCoordinate(verts,  50.0f, -5.0f,  50.0f); // north east corner
-    VertexService::AddColor(verts, sand);
-    VertexService::AddTextureCoordinate(verts, 1.0f, 1.0f);
-    VertexService::AddCoordinate(verts,  50.0f, -5.0f, -50.0f); // south east corner
-    VertexService::AddColor(verts, sand);
-    VertexService::AddTextureCoordinate(verts, 1.0f, 0.0f);
+    vector<GLfloat> vertices;
+    vertices.clear();
+    vector<GLushort> indices;
+    indices.clear();
+    groundMesh.textureId = imageryTexture;
+    
+    glm::vec3 southWest = glm::vec3(-50.0f, -5.0f, -50.0f);
+    glm::vec2 swTexture = glm::vec2(0.0f, 0.0f);
 
-    indices.push_back(currentIndex);
-    indices.push_back(currentIndex + 1);
-    indices.push_back(currentIndex + 2);
-    indices.push_back(currentIndex);
-    indices.push_back(currentIndex + 2);
-    indices.push_back(currentIndex + 3);
+    glm::vec3 northWest = glm::vec3(-50.0f, -5.0f, 50.0f);
+    glm::vec2 nwTexture = glm::vec2(0.0f, 1.0f);
+    
+    glm::vec3 northEast = glm::vec3(50.0f, -5.0f, 50.0f);
+    glm::vec2 neTexture = glm::vec2(1.0f, 1.0f);
+    
+    glm::vec3 southEast = glm::vec3(50.0f, -5.0f, -50.0f);
+    glm::vec2 seTexture = glm::vec2(1.0f, 0.0f);
+
+    VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
+    VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
+
+    UCreateMesh(groundMesh, vertices, indices);
 }
