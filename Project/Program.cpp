@@ -43,6 +43,8 @@ GLMesh towerMesh;
 GLuint shaderProgramId;
 GLuint tilesTexture;
 GLuint imageryTexture;
+GLuint steelTexture;
+GLuint reinforcementTexture;
 
 glm::vec3 gObjectColor(1.f, 0.2f, 0.0f);
 glm::vec3 gLightColor(1.0f, 1.0f, 1.0f);
@@ -168,8 +170,22 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     
     SetGroundPlane();
+
     starshipTiledSectionMesh.textureId = tilesTexture;
     Starship::SetStarshipTiledSection(starshipTiledSectionMesh);
+
+    starshipSteelSectionMesh.textureId = steelTexture;
+    Starship::SetStarshipSteelSection(starshipSteelSectionMesh);
+
+    boosterSmoothSectionMesh.textureId = steelTexture;
+    Starship::SetBoosterSmoothSection(boosterSmoothSectionMesh);
+
+    boosterReinforcedSectionMesh.textureId = reinforcementTexture;
+    Starship::SetBoosterReinforcedSection(boosterReinforcedSectionMesh);
+
+    boosterGridfinMesh;
+
+    towerMesh;
 
     while (!glfwWindowShouldClose(mainWindow))
     {
@@ -346,9 +362,25 @@ bool LoadTextures()
         return false;
     }
 
+    texFilename = "./steel.png";
+    if (!UCreateTexture(texFilename, steelTexture))
+    {
+        cout << "Failed to load texture " << texFilename << endl;
+        return false;
+    }
+
+    texFilename = "./booster_reinforcements.png";
+    if (!UCreateTexture(texFilename, reinforcementTexture))
+    {
+        cout << "Failed to load texture " << texFilename << endl;
+        return false;
+    }
+
     glUseProgram(shaderProgramId); // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 1);
     glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureImagery"), 2);
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureSteel"), 3);
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureReinforcement"), 4);
 }
 
 bool UCreateTexture(const char* filename, GLuint& textureId)
@@ -450,6 +482,9 @@ void URenderFrame()
 
     groundMesh.Draw();
     starshipTiledSectionMesh.Draw();
+    boosterSmoothSectionMesh.Draw();
+    starshipSteelSectionMesh.Draw();
+    boosterReinforcedSectionMesh.Draw();
  
     glfwSwapBuffers(mainWindow);
 }

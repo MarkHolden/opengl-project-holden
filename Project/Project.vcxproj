@@ -162,7 +162,9 @@
     <ClInclude Include="VertexService.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="booster_reinforcements.png" />
     <Image Include="imagery.png" />
+    <Image Include="steel.png" />
     <Image Include="tiles.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

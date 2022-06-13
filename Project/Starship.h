@@ -23,23 +23,60 @@ public:
         vertices.clear();
         std::vector<GLushort> indices;
         indices.clear();
-        //SetCylinder(4.5f, 70.0f, vertices, indices);
-        SetCylinder(4.5f, 36.0f, vertices, indices, 0.0f, PI, glm::vec3(0.0f, 75.0f, 0.0f));
-        //SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices);
-        //SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*Flip*/ true);
+
+        SetCylinder(4.5f, 36.0f, vertices, indices, glm::vec3(0.0f, 75.0f, 0.0f), 0.0f, PI);
+        // TODO: Some nose cone action here.
+        SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices);
+        SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*Flip*/ true);
 
         mesh.UCreateMesh(vertices, indices);
     }
 
+    static void SetBoosterReinforcedSection(GLMesh& mesh)
+    {
+        std::vector<GLfloat> vertices;
+        vertices.clear();
+        std::vector<GLushort> indices;
+        indices.clear();
+
+        SetCylinder(4.5f, 5.0f, vertices, indices, glm::vec3(0.0f, 65.0f, 0.0f));
+
+        mesh.UCreateMesh(vertices, indices);
+    }
+
+    static void SetStarshipSteelSection(GLMesh& mesh)
+    {
+        std::vector<GLfloat> vertices;
+        vertices.clear();
+        std::vector<GLushort> indices;
+        indices.clear();
+
+        SetCylinder(4.5f, 36.0f, vertices, indices, glm::vec3(0.0f, 75.0f, 0.0f), PI);
+
+        mesh.UCreateMesh(vertices, indices);
+    }
+
+    static void SetBoosterSmoothSection(GLMesh& mesh)
+    {
+        std::vector<GLfloat> vertices;
+        vertices.clear();
+        std::vector<GLushort> indices;
+        indices.clear();
+
+        SetCylinder(4.5f, 65.0f, vertices, indices);
+
+        mesh.UCreateMesh(vertices, indices);
+    }
+
+
+
 private:
-    static void SetCylinder(GLfloat radius, GLfloat height, std::vector<GLfloat>& vertices, std::vector<GLushort>& indices, GLfloat start, GLfloat end, glm::vec3 transform = glm::vec3())
+    static void SetCylinder(GLfloat radius, GLfloat height, std::vector<GLfloat>& vertices, std::vector<GLushort>& indices, glm::vec3 transform = glm::vec3(), GLfloat start = 0.0f, GLfloat end = 2 * PI)
     {
         const GLfloat top = height + transform.y;
         const GLfloat base = transform.y;
         GLfloat x = 0.0;
         GLfloat z = 0.0;
-        GLfloat x2 = 0.0;
-        GLfloat z2 = 0.0;
         GLfloat angle = start;
         GLfloat angle_stepsize = 0.3142f;
 
@@ -54,12 +91,12 @@ private:
 
             angle = angle + angle_stepsize;
 
-            x2 = radius * cos(angle) + transform.x;
-            z2 = radius * sin(angle) + transform.z;
+            x = radius * cos(angle) + transform.x;
+            z = radius * sin(angle) + transform.z;
 
-            glm::vec3 northEast = glm::vec3(x2, top, z2);
+            glm::vec3 northEast = glm::vec3(x, top, z);
             glm::vec2 neTexture = glm::vec2(PI * radius / 10, height);
-            glm::vec3 southEast = glm::vec3(x2, base, z2);
+            glm::vec3 southEast = glm::vec3(x, base, z);
             glm::vec2 seTexture = glm::vec2(PI * radius / 10, 0.0f);
 
             VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
@@ -67,107 +104,118 @@ private:
         }
     }
 
-    //static void SetRearFlap(glm::vec3 transform, std::vector<GLfloat>& vertices, std::vector<GLushort>& indices, bool flip = false)
-    //{
+    static void SetRearFlap(glm::vec3 transform, std::vector<GLfloat>& vertices, std::vector<GLushort>& indices, bool flip = false)
+    {
+        GLfloat width = 4.0f * (flip ? -1 : 1);
 
-    //    GLfloat width = 4.0f * (flip ? -1 : 1);
+        //// Steel side of the flap
+        //{
+        //    VertexService::AddVector(vertices, transform.x, transform.y, transform.z - 0.2f); // 0
+        //    VertexService::AddColor(vertices, steel);
 
-    //    GLushort index = indices.back() + 1;
+        //    VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z - 0.2f); // 1
+        //    VertexService::AddColor(vertices, steel);
 
-    //    // Steel side of the flap
-    //    {
-    //        VertexService::AddVector(vertices, transform.x, transform.y, transform.z - 0.2f); // 0
-    //        VertexService::AddColor(vertices, steel);
+        //    VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z - 0.1f); // 2
+        //    VertexService::AddColor(vertices, steel);
 
-    //        VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z - 0.2f); // 1
-    //        VertexService::AddColor(vertices, steel);
+        //    VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z - 0.1f); // 3
+        //    VertexService::AddColor(vertices, steel);
 
-    //        VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z - 0.1f); // 2
-    //        VertexService::AddColor(vertices, steel);
+        //    VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z - 0.2f); // 4
+        //    VertexService::AddColor(vertices, steel);
 
-    //        VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z - 0.1f); // 3
-    //        VertexService::AddColor(vertices, steel);
+        //    // Bottom inside
+        //    indices.push_back(index);
+        //    indices.push_back(index + 1);
+        //    indices.push_back(index + 2);
 
-    //        VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z - 0.2f); // 4
-    //        VertexService::AddColor(vertices, steel);
+        //    // Bottom outside
+        //    indices.push_back(index + 1);
+        //    indices.push_back(index + 2);
+        //    indices.push_back(index + 3);
 
-    //        // Bottom inside
-    //        indices.push_back(index);
-    //        indices.push_back(index + 1);
-    //        indices.push_back(index + 2);
+        //    // Top triangle
+        //    indices.push_back(index + 1);
+        //    indices.push_back(index + 3);
+        //    indices.push_back(index + 4);
+        //}
 
-    //        // Bottom outside
-    //        indices.push_back(index + 1);
-    //        indices.push_back(index + 2);
-    //        indices.push_back(index + 3);
+        // Tile side of the flap
+        {
+            glm::vec3 northWest = glm::vec3(transform.x, transform.y + 10.0f, transform.z + 0.2f);
+            glm::vec2 nwTexture = glm::vec2(0.0f, 10.0f);
+            glm::vec3 southWest = glm::vec3(transform.x, transform.y, transform.z + 0.2f);
+            glm::vec2 swTexture = glm::vec2(0.0f, 0.0f);
 
-    //        // Top triangle
-    //        indices.push_back(index + 1);
-    //        indices.push_back(index + 3);
-    //        indices.push_back(index + 4);
-    //    }
+            glm::vec3 northEast = glm::vec3(transform.x + width, transform.y + 10.0f, transform.z + 0.1f);
+            glm::vec2 neTexture = glm::vec2(width, 10.0f);
+            glm::vec3 southEast = glm::vec3(transform.x + width, transform.y, transform.z + 0.1f);
+            glm::vec2 seTexture = glm::vec2(width, 0.0f);
 
-    //    // Tile side of the flap
-    //    {
-    //        VertexService::AddVector(vertices, transform.x, transform.y, transform.z + 0.2f); // 5
-    //        VertexService::AddColor(vertices, tiles);
+            VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
+            VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
 
-    //        VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z + 0.2f); // 6
-    //        VertexService::AddColor(vertices, tiles);
+            southEast = northEast;
+            southWest = northWest;
+            northEast = glm::vec3(transform.x, transform.y + 16.0f, transform.z + 0.2f);
+            neTexture = glm::vec2(width, 6.0f);
+            VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
 
-    //        VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z + 0.1f); // 7
-    //        VertexService::AddColor(vertices, tiles);
+            //VertexService::AddVector(vertices, transform.x, transform.y, transform.z + 0.2f); // 5
 
-    //        VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z + 0.1f); // 8
-    //        VertexService::AddColor(vertices, tiles);
+            //VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z + 0.2f); // 6
 
-    //        VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z + 0.2f); // 9
-    //        VertexService::AddColor(vertices, tiles);
+            //VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z + 0.1f); // 7
 
-    //        // Bottom inside
-    //        indices.push_back(index + 5);
-    //        indices.push_back(index + 6);
-    //        indices.push_back(index + 7);
+            //VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z + 0.1f); // 8
 
-    //        // Bottom outside
-    //        indices.push_back(index + 6);
-    //        indices.push_back(index + 7);
-    //        indices.push_back(index + 8);
+            //VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z + 0.2f); // 9
 
-    //        // Top triangle
-    //        indices.push_back(index + 6);
-    //        indices.push_back(index + 8);
-    //        indices.push_back(index + 9);
-    //    }
+            //// Bottom inside
+            //indices.push_back(index + 5);
+            //indices.push_back(index + 6);
+            //indices.push_back(index + 7);
 
-    //    // Flap edges
-    //    {
-    //        VertexService::AddVector(vertices, transform.x, transform.y, transform.z - 0.2f); // 10
-    //        VertexService::AddColor(vertices, tiles);
+            //// Bottom outside
+            //indices.push_back(index + 6);
+            //indices.push_back(index + 7);
+            //indices.push_back(index + 8);
 
-    //        VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z - 0.2f); // 11
-    //        VertexService::AddColor(vertices, tiles);
+            //// Top triangle
+            //indices.push_back(index + 6);
+            //indices.push_back(index + 8);
+            //indices.push_back(index + 9);
+        }
 
-    //        VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z - 0.1f); // 12
-    //        VertexService::AddColor(vertices, tiles);
+        // Flap edges
+        {
+            //VertexService::AddVector(vertices, transform.x, transform.y, transform.z - 0.2f); // 10
+            //VertexService::AddColor(vertices, tiles);
 
-    //        VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z - 0.1f); // 13
-    //        VertexService::AddColor(vertices, tiles);
+            //VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z - 0.2f); // 11
+            //VertexService::AddColor(vertices, tiles);
 
-    //        VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z - 0.2f); // 14
-    //        VertexService::AddColor(vertices, tiles);
+            //VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z - 0.1f); // 12
+            //VertexService::AddColor(vertices, tiles);
 
-    //        // Bottom
-    //        VertexService::SetTriangle(indices, index + 10, index + 5, index + 7);
-    //        VertexService::SetTriangle(indices, index + 10, index + 12, index + 7);
+            //VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z - 0.1f); // 13
+            //VertexService::AddColor(vertices, tiles);
 
-    //        // Side
-    //        VertexService::SetTriangle(indices, index + 13, index + 12, index + 7);
-    //        VertexService::SetTriangle(indices, index + 13, index + 8, index + 7);
+            //VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z - 0.2f); // 14
+            //VertexService::AddColor(vertices, tiles);
 
-    //        // Top
-    //        VertexService::SetTriangle(indices, index + 13, index + 14, index + 8);
-    //        VertexService::SetTriangle(indices, index + 8, index + 9, index + 14);
-    //    }
-    //}
+            //// Bottom
+            //VertexService::SetTriangle(indices, index + 10, index + 5, index + 7);
+            //VertexService::SetTriangle(indices, index + 10, index + 12, index + 7);
+
+            //// Side
+            //VertexService::SetTriangle(indices, index + 13, index + 12, index + 7);
+            //VertexService::SetTriangle(indices, index + 13, index + 8, index + 7);
+
+            //// Top
+            //VertexService::SetTriangle(indices, index + 13, index + 14, index + 8);
+            //VertexService::SetTriangle(indices, index + 8, index + 9, index + 14);
+        }
+    }
 };

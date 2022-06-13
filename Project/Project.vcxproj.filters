@@ -46,5 +46,11 @@
     <Image Include="imagery.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="booster_reinforcements.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="steel.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
