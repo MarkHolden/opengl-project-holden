@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GLMesh.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="stb.cpp" />
   </ItemGroup>

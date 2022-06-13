@@ -110,21 +110,6 @@ void UResizeWindow(GLFWwindow* window, int width, int height);
 void UProcessInput();
 
 /// <summary>
-/// You Create a Mesh!
-/// <para>Function to create the Vertex Buffer Object</para>
-/// </summary>
-/// <param name="mesh">Mesh to create.</param>
-/// <param name="vertices">Vector containing the vertices.</param>
-/// <param name="indices">Vector containing the indices.</param>
-void UCreateMesh(GLMesh& mesh, vector<GLfloat>& verts, vector<GLushort>& indices);
-
-/// <summary>
-/// You Destroy a Mesh!
-/// </summary>
-/// <param name="mesh"></param>
-void UDestroyMesh(GLMesh& mesh);
-
-/// <summary>
 /// You Render the current frame!
 /// </summary>
 void URenderFrame();
@@ -183,6 +168,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     
     SetGroundPlane();
+    //Starship::SetStarshipTiledSection();
 
     while (!glfwWindowShouldClose(mainWindow))
     {
@@ -195,7 +181,7 @@ int main(int argc, char* argv[])
         glfwPollEvents();
     }
 
-    UDestroyMesh(groundMesh);
+    groundMesh.UDestroyMesh();
     Shader::UDestroyShaderProgram(shaderProgramId);
     glDeleteTextures(1, &tilesTexture);
     glfwDestroyWindow(mainWindow);
@@ -341,50 +327,6 @@ void UProcessInput()
     // Press P (toggle between Orthographic and Perspective views
     if (glfwGetKey(mainWindow, GLFW_KEY_P) == GLFW_PRESS)
         isOrthographic = !isOrthographic;
-}
-
-void UCreateMesh(GLMesh& mesh, vector<GLfloat>& vertices, vector<GLushort>& indices)
-{
-    
-    //Starship::SetStarship(verts, indices);
-    
-    glGenVertexArrays(1, &mesh.vertexArrayObject);
-    glBindVertexArray(mesh.vertexArrayObject);
-
-    glGenBuffers(2, mesh.vertexBufferObjects);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferObjects[0]);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-
-    mesh.vertexCount = indices.size();//sizeof(indices) / sizeof(indices[0]); // Memory of indices array divided by the memory of the first element
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.vertexBufferObjects[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort), indices.data(), GL_STATIC_DRAW);
-
-    // Creates the Vertex Attribute Pointer
-    const GLuint floatsPerVertex = 3; // Number of coordinates per vertex
-    const GLuint floatsPerNormal = 3; // unit vector perpendicular to the face
-    const GLuint floatsPerTexture = 2; // s, t
-    // Strides between vertex coordinates is 8 (x, y, z, n1, n2, n3, s, t). A tightly packed stride is 0.
-    GLint stride = sizeof(float) * (floatsPerVertex + floatsPerNormal + floatsPerTexture); // The number of floats before each
-
-    // Creates the Vertex Attribute Pointer
-    const int LOCATION_ATTRIBUTE = 0;
-    glVertexAttribPointer(LOCATION_ATTRIBUTE, floatsPerVertex, GL_FLOAT, GL_FALSE, stride, 0);
-    glEnableVertexAttribArray(LOCATION_ATTRIBUTE);
-
-    const int COLOR_ATTRIBUTE = 1;
-    glVertexAttribPointer(COLOR_ATTRIBUTE, floatsPerNormal, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * floatsPerVertex));
-    glEnableVertexAttribArray(COLOR_ATTRIBUTE);
-
-    const int TEXTURE_COORDINATE_ATTRIBUTE = 2;
-    glVertexAttribPointer(TEXTURE_COORDINATE_ATTRIBUTE, floatsPerTexture, GL_FLOAT, GL_FALSE, stride, (char*)(sizeof(float) * (floatsPerVertex + floatsPerNormal)));
-    glEnableVertexAttribArray(TEXTURE_COORDINATE_ATTRIBUTE);
-}
-
-void UDestroyMesh(GLMesh& mesh)
-{
-    glDeleteVertexArrays(1, &mesh.vertexArrayObject);
-    glDeleteBuffers(2, mesh.vertexBufferObjects);
 }
 
 bool LoadTextures()
@@ -533,5 +475,5 @@ void SetGroundPlane()
     VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
     VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
 
-    UCreateMesh(groundMesh, vertices, indices);
+    groundMesh.UCreateMesh(vertices, indices);
 }
