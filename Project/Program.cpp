@@ -168,7 +168,8 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     
     SetGroundPlane();
-    //Starship::SetStarshipTiledSection();
+    starshipTiledSectionMesh.textureId = tilesTexture;
+    Starship::SetStarshipTiledSection(starshipTiledSectionMesh);
 
     while (!glfwWindowShouldClose(mainWindow))
     {
@@ -346,8 +347,8 @@ bool LoadTextures()
     }
 
     glUseProgram(shaderProgramId); // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
-    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 0);
-    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureImagery"), 1);
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureTiles"), 1);
+    glUniform1i(glGetUniformLocation(shaderProgramId, "uTextureImagery"), 2);
 }
 
 bool UCreateTexture(const char* filename, GLuint& textureId)
@@ -448,6 +449,7 @@ void URenderFrame()
     glUniform2fv(UVScaleLoc, 1, glm::value_ptr(glm::vec2(1.0f, 1.0f)));
 
     groundMesh.Draw();
+    starshipTiledSectionMesh.Draw();
  
     glfwSwapBuffers(mainWindow);
 }
