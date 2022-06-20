@@ -19,8 +19,12 @@ public:
         std::vector<GLushort> indices;
         indices.clear();
 
-        SetCylinder(4.5f, 36.0f, vertices, indices, glm::vec3(0.0f, 75.0f, 0.0f), 0.0f, PI);
-        // TODO: Some nose cone action here.
+        GLfloat tileStart = 0.0f;
+        GLfloat tileEnd = PI;
+        SetCylinder(4.5f, 36.0f, vertices, indices, glm::vec3(0.0f, 75.0f, 0.0f), tileStart, tileEnd);
+        
+        SetNoseCone(vertices, indices, glm::vec3(0.0f, 111.0f, 0.0f), tileStart, tileEnd);
+        
         SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices);
         SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*Flip*/ true);
 
@@ -46,7 +50,10 @@ public:
         std::vector<GLushort> indices;
         indices.clear();
 
-        SetCylinder(4.5f, 36.0f, vertices, indices, glm::vec3(0.0f, 75.0f, 0.0f), PI);
+        GLfloat steelStart = PI;
+        SetCylinder(4.5f, 36.0f, vertices, indices, glm::vec3(0.0f, 75.0f, 0.0f), steelStart);
+        SetNoseCone(vertices, indices, glm::vec3(0.0f, 111.0f, 0.0f), steelStart);
+
 
         mesh.UCreateMesh(vertices, indices);
     }
@@ -99,42 +106,83 @@ private:
         }
     }
 
-    static void SetRearFlap(glm::vec3 transform, std::vector<GLfloat>& vertices, std::vector<GLushort>& indices, bool flip = false)
+    static void SetNoseCone(std::vector<GLfloat>& vertices, std::vector<GLushort>& indices, glm::vec3 transform = glm::vec3(), GLfloat start = 0.0f, GLfloat end = 2 * PI)
     {
-        GLfloat width = 4.0f * (flip ? -1 : 1);
+        SetConeSection(4.5f, 4.4f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(4.4f, 4.3f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(4.3f, 4.2f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(4.2f, 4.1f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(4.1f, 4.0f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(4.0f, 3.8f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(3.8f, 3.6f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(3.6f, 3.4f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(3.4f, 3.2f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(3.2f, 3.0f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(3.0f, 2.7f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(2.7f, 2.4f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(2.4f, 2.0f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(2.0f, 1.6f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(1.6f, 1.1f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(1.1f, 0.5f, 1.0f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 1.0f, 0.0f);
+        SetConeSection(0.5f, 0.1f, 0.3f, vertices, indices, transform, start, end);
+        transform = transform + glm::vec3(0.0f, 0.3f, 0.0f);
+        SetConeSection(0.1f, 0.0f, 0.05f, vertices, indices, transform, start, end);
+    }
 
-        //// Steel side of the flap
-        //{
-        //    VertexService::AddVector(vertices, transform.x, transform.y, transform.z - 0.2f); // 0
-        //    VertexService::AddColor(vertices, steel);
+    static void SetConeSection(GLfloat radius1, GLfloat radius2, GLfloat height, std::vector<GLfloat>&vertices, std::vector<GLushort>&indices, glm::vec3 transform = glm::vec3(), GLfloat start = 0.0f, GLfloat end = 2 * PI)
+    {
+        const GLfloat top = height + transform.y;
+        const GLfloat base = transform.y;
+        GLfloat x = 0.0;
+        GLfloat z = 0.0;
+        GLfloat x2 = 0.0;
+        GLfloat z2 = 0.0;
+        GLfloat angle = start;
+        GLfloat angle_stepsize = 0.3142f;
 
-        //    VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z - 0.2f); // 1
-        //    VertexService::AddColor(vertices, steel);
+        while (angle < end) {
+            x = radius1 * cos(angle) + transform.x;
+            z = radius1 * sin(angle) + transform.z;
+            x2 = radius2 * cos(angle) + transform.x;
+            z2 = radius2 * sin(angle) + transform.z;
 
-        //    VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z - 0.1f); // 2
-        //    VertexService::AddColor(vertices, steel);
+            glm::vec3 northWest = glm::vec3(x2, top, z2);
+            glm::vec2 nwTexture = glm::vec2(0.0f, height);
+            glm::vec3 southWest = glm::vec3(x, base, z);
+            glm::vec2 swTexture = glm::vec2(0.0f, 0.0f);
 
-        //    VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z - 0.1f); // 3
-        //    VertexService::AddColor(vertices, steel);
+            angle = angle + angle_stepsize;
 
-        //    VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z - 0.2f); // 4
-        //    VertexService::AddColor(vertices, steel);
+            x = radius1 * cos(angle) + transform.x;
+            z = radius1 * sin(angle) + transform.z;
+            x2 = radius2 * cos(angle) + transform.x;
+            z2 = radius2 * sin(angle) + transform.z;
 
-        //    // Bottom inside
-        //    indices.push_back(index);
-        //    indices.push_back(index + 1);
-        //    indices.push_back(index + 2);
+            glm::vec3 northEast = glm::vec3(x2, top, z2);
+            glm::vec2 neTexture = glm::vec2(PI * radius2 / 10, height);
+            glm::vec3 southEast = glm::vec3(x, base, z);
+            glm::vec2 seTexture = glm::vec2(PI * radius1 / 10, 0.0f);
 
-        //    // Bottom outside
-        //    indices.push_back(index + 1);
-        //    indices.push_back(index + 2);
-        //    indices.push_back(index + 3);
-
-        //    // Top triangle
-        //    indices.push_back(index + 1);
-        //    indices.push_back(index + 3);
-        //    indices.push_back(index + 4);
-        //}
+            VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
+            VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
+        }
+    }
 
         // Tile side of the flap
         {
