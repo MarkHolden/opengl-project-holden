@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLMesh.h" />
+    <ClInclude Include="Mechazilla.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Starship.h" />
     <ClInclude Include="VertexService.h" />

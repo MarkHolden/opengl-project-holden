@@ -21,6 +21,7 @@
 #include "GLMesh.h"
 #include "Shader.h"
 #include "Starship.h"
+#include "Mechazilla.h"
 #include "VertexService.h"
 #include <vector>
 
@@ -185,7 +186,8 @@ int main(int argc, char* argv[])
 
     boosterGridfinMesh;
 
-    towerMesh;
+    towerMesh.textureId = steelTexture;
+    Mechazilla::SetTower(towerMesh);
 
     while (!glfwWindowShouldClose(mainWindow))
     {
@@ -485,6 +487,7 @@ void URenderFrame()
     boosterSmoothSectionMesh.Draw();
     starshipSteelSectionMesh.Draw();
     boosterReinforcedSectionMesh.Draw();
+    towerMesh.Draw();
  
     glfwSwapBuffers(mainWindow);
 }
