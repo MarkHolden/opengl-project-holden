@@ -10,11 +10,6 @@ using namespace std;
 
 constexpr auto PI = 3.1415927;
 
-const glm::vec3 tiles = glm::vec3(0.1f, 0.1f, 0.1f);
-const glm::vec3 steel = glm::vec3(0.56f, 0.62f, 0.65f);
-
-bool debug = false;
-
 class Starship {
 public:
     static void SetStarshipTiledSection(GLMesh& mesh)
