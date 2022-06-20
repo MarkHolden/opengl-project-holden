@@ -28,6 +28,9 @@ public:
         SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices);
         SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*isFlipped*/ true);
 
+        SetFrontFlap(glm::vec3(4.0f, 112.0f, 0.0f), vertices, indices);
+        SetFrontFlap(glm::vec3(-4.0f, 112.0f, 0.0f), vertices, indices, /*isFlipped*/ true);
+
         mesh.UCreateMesh(vertices, indices);
     }
 
@@ -56,6 +59,9 @@ public:
 
         SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices, /*isFlipped*/ false, /*isTiles*/ false);
         SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*isFlipped*/ true, /*isTiles*/ false);
+
+        SetFrontFlap(glm::vec3(4.0f, 112.0f, 0.0f), vertices, indices, /*isFlipped*/ false, /*isTiles*/ false);
+        SetFrontFlap(glm::vec3(-4.0f, 112.0f, 0.0f), vertices, indices, /*isFlipped*/ true, /*isTiles*/ false);
 
         mesh.UCreateMesh(vertices, indices);
     }
@@ -186,32 +192,68 @@ private:
         }
     }
 
-        // Tile side of the flap
+    static void SetFrontFlap(glm::vec3 transform, std::vector<GLfloat>& vertices, std::vector<GLushort>& indices, bool isFlipped = false, bool isTiles = true)
+    {
+        GLfloat width = 3.0f * (isFlipped ? -1 : 1);
+        int offsetDirection = isTiles ? 1 : -1;
+
+        glm::vec3 northWest = glm::vec3(transform.x - width / 3, transform.y + 3.0f, transform.z + 0.2f * offsetDirection);
+        glm::vec2 nwTexture = glm::vec2(0.0f, 3.0f);
+        glm::vec3 southWest = glm::vec3(transform.x, transform.y, transform.z + 0.2f * offsetDirection);
+        glm::vec2 swTexture = glm::vec2(0.0f, 0.0f);
+
+        glm::vec3 northEast = glm::vec3(transform.x + width, transform.y + 3.0f, transform.z + 0.1f * offsetDirection);
+        glm::vec2 neTexture = glm::vec2(width, 3.0f);
+        glm::vec3 southEast = glm::vec3(transform.x + width, transform.y, transform.z + 0.1f * offsetDirection);
+        glm::vec2 seTexture = glm::vec2(width, 0.0f);
+
+        VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
+        VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
+
+        glm::vec3 bottom = southWest; // set these before they get reassigned.
+        glm::vec3 wingtip1 = southEast;
+
+        southEast = northEast;
+        southWest = northWest;
+        northWest = glm::vec3(transform.x - 2 * width / 3, transform.y + 10.0f, transform.z + 0.2f * offsetDirection);
+        nwTexture = glm::vec2(0.0f, 7.0f);
+        VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, southEast, seTexture);
+
+        // Flap edges
+        if (isTiles)
         {
-            glm::vec3 northWest = glm::vec3(transform.x, transform.y + 10.0f, transform.z + 0.2f);
-            glm::vec2 nwTexture = glm::vec2(0.0f, 10.0f);
-            glm::vec3 southWest = glm::vec3(transform.x, transform.y, transform.z + 0.2f);
-            glm::vec2 swTexture = glm::vec2(0.0f, 0.0f);
+            glm::vec3 wingtip2 = northEast;
+            glm::vec3 wingtip3 = northWest;
+            glm::vec3 wingtip1Back = wingtip1 + glm::vec3(0.0f, 0.0f, -0.2f);
+            glm::vec3 wingtip2Back = wingtip2 + glm::vec3(0.0f, 0.0f, -0.2f);
 
-            glm::vec3 northEast = glm::vec3(transform.x + width, transform.y + 10.0f, transform.z + 0.1f);
-            glm::vec2 neTexture = glm::vec2(width, 10.0f);
-            glm::vec3 southEast = glm::vec3(transform.x + width, transform.y, transform.z + 0.1f);
-            glm::vec2 seTexture = glm::vec2(width, 0.0f);
+            swTexture = glm::vec2(0.0f, 0.0f);
+            seTexture = glm::vec2(0.2f, 0.0f);
+            neTexture = glm::vec2(0.2f, 3.0f);
+            nwTexture = glm::vec2(0.0f, 3.0f);
 
-            VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
-            VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
+            // Side edge
+            VertexService::AddFace(vertices, indices, wingtip1Back, swTexture, wingtip1, seTexture, wingtip2, neTexture);
+            VertexService::AddFace(vertices, indices, wingtip1Back, swTexture, wingtip2, neTexture, wingtip2Back, nwTexture);
 
-            southEast = northEast;
-            southWest = northWest;
-            northEast = glm::vec3(transform.x, transform.y + 16.0f, transform.z + 0.2f);
-            neTexture = glm::vec2(width, 6.0f);
-            VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
+            glm::vec3 wingtip3Back = wingtip3 + glm::vec3(0.0f, 0.0f, -0.4f);
+            neTexture = glm::vec2(0.4f, 10.4f);
+            nwTexture = glm::vec2(0.0f, 10.4f);
 
-            //VertexService::AddVector(vertices, transform.x, transform.y, transform.z + 0.2f); // 5
+            // Top edge
+            VertexService::AddFace(vertices, indices, wingtip2Back, swTexture, wingtip2, seTexture, wingtip3, neTexture);
+            VertexService::AddFace(vertices, indices, wingtip2Back, swTexture, wingtip3, neTexture, wingtip3Back, nwTexture);
 
-            //VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z + 0.2f); // 6
+            glm::vec3 bottomBack = bottom + glm::vec3(0.0f, 0.0f, -0.4f);
+            seTexture = glm::vec2(0.4f, 0.0f);
+            neTexture = glm::vec2(0.4f, width);
+            nwTexture = glm::vec2(0.0f, width);
 
-            //VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z + 0.1f); // 7
+            // Bottom
+            VertexService::AddFace(vertices, indices, bottomBack, swTexture, bottom, seTexture, wingtip1, neTexture);
+            VertexService::AddFace(vertices, indices, bottomBack, swTexture, wingtip1, neTexture, wingtip1Back, nwTexture);
+        }
+    }
 
     static void SetRearFlap(glm::vec3 transform, std::vector<GLfloat>&vertices, std::vector<GLushort>&indices, bool isFlipped = false, bool isTiles = true)
     {
