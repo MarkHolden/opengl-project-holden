@@ -49,7 +49,7 @@ GLuint reinforcementTexture;
 
 glm::vec3 gObjectColor(1.f, 0.2f, 0.0f);
 glm::vec3 gLightColor(1.0f, 1.0f, 1.0f);
-glm::vec3 gLightPosition(1.0f, 10.0f, -30.0f);
+glm::vec3 gLightPosition(-20.0f, 15.0f, 20.0f);
 
 /// <summary>
 /// Speed of camera movment
@@ -184,7 +184,9 @@ int main(int argc, char* argv[])
     boosterReinforcedSectionMesh.textureId = reinforcementTexture;
     Starship::SetBoosterReinforcedSection(boosterReinforcedSectionMesh);
 
-    boosterGridfinMesh;
+    // TODO: actual gridfin texture
+    boosterGridfinMesh.textureId = reinforcementTexture;
+    //Starship::SetBoosterGridfins(boosterGridfinMesh);
 
     towerMesh.textureId = steelTexture;
     Mechazilla::SetTower(towerMesh);
@@ -265,7 +267,7 @@ void UMousePositionCallback(GLFWwindow* window, double xPosition, double yPositi
         gFirstMouse = false;
     }
 
-    static const float mouseSensitivity = 0.1f;
+    static const float mouseSensitivity = 0.5f;
     float xOffset = (xPosition - gLastX) * mouseSensitivity;
     float yOffset = (gLastY - yPosition) * mouseSensitivity; // reversed (y-coordinates go from bottom to top)
 
@@ -276,10 +278,10 @@ void UMousePositionCallback(GLFWwindow* window, double xPosition, double yPositi
     gPitch += yOffset;
 
     // Constrain pitch from flipping over
-    if (gPitch > 89.0f)
-        gPitch = 89.0f;
-    if (gPitch < -89.0f)
-        gPitch = -89.0f;
+    //if (gPitch > 89.0f)
+    //    gPitch = 89.0f;
+    //if (gPitch < -89.0f)
+    //    gPitch = -89.0f;
 
     glm::vec3 front;
     front.x = cos(glm::radians(gYaw)) * cos(glm::radians(gPitch));
