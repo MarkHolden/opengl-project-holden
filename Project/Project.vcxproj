@@ -165,6 +165,7 @@
   <ItemGroup>
     <Image Include="booster_reinforcements.png" />
     <Image Include="imagery.png" />
+    <Image Include="mechazilla.png" />
     <Image Include="steel.png" />
     <Image Include="tiles.png" />
   </ItemGroup>
