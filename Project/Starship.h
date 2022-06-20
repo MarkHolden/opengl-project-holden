@@ -26,7 +26,7 @@ public:
         SetNoseCone(vertices, indices, glm::vec3(0.0f, 111.0f, 0.0f), tileStart, tileEnd);
         
         SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices);
-        SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*Flip*/ true);
+        SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*isFlipped*/ true);
 
         mesh.UCreateMesh(vertices, indices);
     }
@@ -54,6 +54,8 @@ public:
         SetCylinder(4.5f, 36.0f, vertices, indices, glm::vec3(0.0f, 75.0f, 0.0f), steelStart);
         SetNoseCone(vertices, indices, glm::vec3(0.0f, 111.0f, 0.0f), steelStart);
 
+        SetRearFlap(glm::vec3(4.5f, 75.0f, 0.0f), vertices, indices, /*isFlipped*/ false, /*isTiles*/ false);
+        SetRearFlap(glm::vec3(-4.5f, 75.0f, 0.0f), vertices, indices, /*isFlipped*/ true, /*isTiles*/ false);
 
         mesh.UCreateMesh(vertices, indices);
     }
@@ -211,54 +213,66 @@ private:
 
             //VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z + 0.1f); // 7
 
-            //VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z + 0.1f); // 8
+    static void SetRearFlap(glm::vec3 transform, std::vector<GLfloat>&vertices, std::vector<GLushort>&indices, bool isFlipped = false, bool isTiles = true)
+    {
+        GLfloat width = 4.0f * (isFlipped ? -1 : 1);
+        int offsetDirection = isTiles ? 1 : -1;
 
-            //VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z + 0.2f); // 9
+        glm::vec3 northWest = glm::vec3(transform.x, transform.y + 10.0f, transform.z + 0.2f * offsetDirection);
+        glm::vec2 nwTexture = glm::vec2(0.0f, 10.0f);
+        glm::vec3 southWest = glm::vec3(transform.x, transform.y, transform.z + 0.2f * offsetDirection);
+        glm::vec2 swTexture = glm::vec2(0.0f, 0.0f);
 
-            //// Bottom inside
-            //indices.push_back(index + 5);
-            //indices.push_back(index + 6);
-            //indices.push_back(index + 7);
+        glm::vec3 northEast = glm::vec3(transform.x + width, transform.y + 10.0f, transform.z + 0.1f * offsetDirection);
+        glm::vec2 neTexture = glm::vec2(width, 10.0f);
+        glm::vec3 southEast = glm::vec3(transform.x + width, transform.y, transform.z + 0.1f * offsetDirection);
+        glm::vec2 seTexture = glm::vec2(width, 0.0f);
 
-            //// Bottom outside
-            //indices.push_back(index + 6);
-            //indices.push_back(index + 7);
-            //indices.push_back(index + 8);
+        VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, northEast, neTexture);
+        VertexService::AddFace(vertices, indices, southWest, swTexture, northEast, neTexture, southEast, seTexture);
 
-            //// Top triangle
-            //indices.push_back(index + 6);
-            //indices.push_back(index + 8);
-            //indices.push_back(index + 9);
-        }
+        glm::vec3 bottom = southWest; // set these before they get reassigned.
+        glm::vec3 wingtip1 = southEast;
+
+        southEast = northEast;
+        southWest = northWest;
+        northWest = glm::vec3(transform.x, transform.y + 16.0f, transform.z + 0.2f * offsetDirection);
+        nwTexture = glm::vec2(0.0f, 6.0f);
+        VertexService::AddFace(vertices, indices, southWest, swTexture, northWest, nwTexture, southEast, seTexture);
 
         // Flap edges
+        if (isTiles)
         {
-            //VertexService::AddVector(vertices, transform.x, transform.y, transform.z - 0.2f); // 10
-            //VertexService::AddColor(vertices, tiles);
+            glm::vec3 wingtip2 = northEast;
+            glm::vec3 wingtip3 = northWest;
+            glm::vec3 wingtip1Back = wingtip1 + glm::vec3(0.0f, 0.0f, -0.2f);
+            glm::vec3 wingtip2Back = wingtip2 + glm::vec3(0.0f, 0.0f, -0.2f);
 
-            //VertexService::AddVector(vertices, transform.x, transform.y + 10.0f, transform.z - 0.2f); // 11
-            //VertexService::AddColor(vertices, tiles);
+            swTexture = glm::vec2(0.0f, 0.0f);
+            seTexture = glm::vec2(0.2f, 0.0f);
+            neTexture = glm::vec2(0.2f, 10.0f);
+            nwTexture = glm::vec2(0.0f, 10.0f);
 
-            //VertexService::AddVector(vertices, transform.x + width, transform.y, transform.z - 0.1f); // 12
-            //VertexService::AddColor(vertices, tiles);
+            // Side edge
+            VertexService::AddFace(vertices, indices, wingtip1Back, swTexture, wingtip1, seTexture, wingtip2, neTexture);
+            VertexService::AddFace(vertices, indices, wingtip1Back, swTexture, wingtip2, neTexture, wingtip2Back, nwTexture);
 
-            //VertexService::AddVector(vertices, transform.x + width, transform.y + 10.0f, transform.z - 0.1f); // 13
-            //VertexService::AddColor(vertices, tiles);
+            glm::vec3 wingtip3Back = wingtip3 + glm::vec3(0.0f, 0.0f, -0.4f);
+            neTexture = glm::vec2(0.4f, 7.2f);
+            nwTexture = glm::vec2(0.0f, 7.2f);
 
-            //VertexService::AddVector(vertices, transform.x, transform.y + 13.0f, transform.z - 0.2f); // 14
-            //VertexService::AddColor(vertices, tiles);
+            // Top edge
+            VertexService::AddFace(vertices, indices, wingtip2Back, swTexture, wingtip2, seTexture, wingtip3, neTexture);
+            VertexService::AddFace(vertices, indices, wingtip2Back, swTexture, wingtip3, neTexture, wingtip3Back, nwTexture);
 
-            //// Bottom
-            //VertexService::SetTriangle(indices, index + 10, index + 5, index + 7);
-            //VertexService::SetTriangle(indices, index + 10, index + 12, index + 7);
+            glm::vec3 bottomBack = bottom + glm::vec3(0.0f, 0.0f, -0.4f);
+            seTexture = glm::vec2(0.4f, 0.0f);
+            neTexture = glm::vec2(0.4f, width);
+            nwTexture = glm::vec2(0.0f, width);
 
-            //// Side
-            //VertexService::SetTriangle(indices, index + 13, index + 12, index + 7);
-            //VertexService::SetTriangle(indices, index + 13, index + 8, index + 7);
-
-            //// Top
-            //VertexService::SetTriangle(indices, index + 13, index + 14, index + 8);
-            //VertexService::SetTriangle(indices, index + 8, index + 9, index + 14);
+            // Bottom
+            VertexService::AddFace(vertices, indices, bottomBack, swTexture, bottom, seTexture, wingtip1, neTexture);
+            VertexService::AddFace(vertices, indices, bottomBack, swTexture, wingtip1, neTexture, wingtip1Back, nwTexture);
         }
     }
 };
